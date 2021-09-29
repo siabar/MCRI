@@ -7,10 +7,11 @@ class API:
 
     #sct = "http://snomed.info/sct/32506021000036107/version/20210331"
     sct = "http://snomed.info/sct"
+    server = "100.1000.0.1:8080"
 
     @staticmethod
     def call_ontoserver_extend_api(category, reason):
-        url = "http://0.0.0.0:8080/fhir/ValueSet/$expand?url=" + API.sct + "?"
+        url = "http://" + API.server + "/fhir/ValueSet/$expand?url=" + API.sct + "?"
         _filter = reason
 
         payload = "<file contents here>"
@@ -55,7 +56,7 @@ class API:
 
     @staticmethod
     def call_init_transitive_closure(category):
-        url = "http://0.0.0.0:8080/fhir/$closure"
+        url = "http://" + API.server + "/fhir/$closure"
 
         payload = {"resourceType": "Parameters",
                    "parameter": [
@@ -75,7 +76,7 @@ class API:
 
     @staticmethod
     def call_all_transitive_closure(category):
-        url = "http://0.0.0.0:8080/fhir/$closure"
+        url = "http://" + API.server + "/fhir/$closure"
 
         payload = {"resourceType": "Parameters",
                    "parameter": [
@@ -118,7 +119,7 @@ class API:
     @staticmethod
     def call_transitivec_closure_set_codes(category, set_codes):
 
-        url = "http://0.0.0.0:8080/fhir/$closure"
+        url = "http://" + API.server + "/fhir/$closure"
 
         parameter = [
             {
@@ -146,7 +147,7 @@ class API:
 
     @staticmethod
     def get_all_synonym_candidate(code):
-        url = "http://0.0.0.0:8080/fhir/CodeSystem/$lookup?system=http://snomed.info/sct" + "&version=" + API.sct + "&property=designation&"
+        url = "http://" + API.server + "/fhir/CodeSystem/$lookup?system=http://snomed.info/sct" + "&version=" + API.sct + "&property=designation&"
         # url = "https://r4.ontoserver.csiro.au/fhir/CodeSystem/$lookup?system=http://snomed.info/sct" + "&property=designation&"
 
         payload = "<file contents here>"
@@ -186,7 +187,7 @@ class API:
 
     @staticmethod
     def get_involved_concepts(cat, code):
-        url = "http://0.0.0.0:8080/fhir/ValueSet/$expand?url=" + API.sct + "?"
+        url = "http://" + API.server + "/fhir/ValueSet/$expand?url=" + API.sct + "?"
 
         payload = "<file contents here>"
         headers = {
