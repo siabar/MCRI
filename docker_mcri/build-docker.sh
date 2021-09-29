@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-docker build -t readbiomed/mcri .
+docker build  --no-cache -t readbiomed/mcri .

@@ -11,6 +11,8 @@ class Utils:
 
     fileDir = os.path.dirname(os.path.abspath(__file__))
     data_dir = fileDir.replace("src", "data")
+    input_dir = fileDir.replace("src", "input")
+    output_dir = fileDir.replace("src", "output")
     # data_dir = os.path.join(fileDir, "data")
 
     @staticmethod
@@ -105,6 +107,19 @@ class Utils:
             return list_similarities[0], 0
         else:
             return "", 1
+
+    @staticmethod
+    def get_seen_rfv(phrase_code_category):
+        seen_rfv = {}
+        for phrase_category in phrase_code_category.values():
+            for phrase, category in phrase_category.items():
+                if phrase not in seen_rfv:
+                    seen_rfv[phrase] = [category]
+                else:
+                    pre_categories = seen_rfv[phrase]
+                    pre_categories.append(category)
+                    seen_rfv.update({phrase: pre_categories})
+        return seen_rfv
 
 
 

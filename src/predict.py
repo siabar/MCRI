@@ -1,7 +1,7 @@
 import json
 import os
 import xlsxwriter
-
+import logging
 import metamap
 from ontoserver import API
 from preprocessing import Preprocess
@@ -9,6 +9,9 @@ from utility import Utils
 from datetime import datetime
 import const
 from pymetamap import MetaMap
+import logging
+
+logging.basicConfig(filename='app.log', filemode='a', format='%(asctime)s - %(message)s', level=logging.INFO)
 
 
 involved_concepts = Utils.load_json(os.path.join(Utils.data_dir, "direct_involved_concepts.json"))
@@ -23,6 +26,8 @@ extra_categories = Utils.load_json(os.path.join(Utils.data_dir, "direct_extra_ca
 main_codes = Utils.load_json(os.path.join(Utils.data_dir, "direct_main_codes.json"))
 
 phrase_code_category = Utils.load_json(os.path.join(Utils.data_dir, "direct_phrase_code_category.json"))
+
+
 
 
 # all_possible_reasons_and_synonyms = Utils.merge(direct_all_possible_reasons_and_synonyms, semi_all_possible_reasons_and_synonyms)
@@ -48,8 +53,8 @@ def check_categories_distance(reason, preprocessing=True):
         for cats in const.CATEGORY_NAME:
             preprocessed_reason_original = reason
 
-            if cats == "95320005|Disorder of skin":
-                chek = 0
+            # if cats == "95320005|Disorder of skin":
+            #     chek = 0
 
 
             matched_concept = {}
@@ -398,21 +403,21 @@ def check_categories_distance(reason, preprocessing=True):
 def predict(reason, mm):
     matched_concepts, all_possible_reasons_lower = check_categories_distance(reason)
     matched_concepts_final = []
-    # if not matched_concepts:
-    #     # multi_words = phrasemachine.get_phrases(reason)
-    #     # list_mv = list(multi_words['counts'])
-    #
-    #     list_mv, _ = metamap.annotate(reason, mm)
-    #     # list_mv = ["check", "x ray"]
-    #     # list_mv_order = sorted(list_mv, key=len, reverse=True)
-    #
-    #     for reason_s in list_mv:
-    #         if reason_s != reason and reason_s not in all_possible_reasons_lower and Preprocess.check_string_has_alphabet(reason_s) and not Preprocess.is_stopwords(reason_s) and len(reason_s) >= 2:
-    #             matched_concepts, _ = check_categories_distance(reason_s, preprocessing=False)
-    #             if matched_concepts:
-    #                 print("found in split reason metamap: ", reason_s)
-    #                 matched_concepts_final += matched_concepts
-    #     matched_concepts = matched_concepts_final
+    if not matched_concepts:
+        # multi_words = phrasemachine.get_phrases(reason)
+        # list_mv = list(multi_words['counts'])
+
+        list_mv, _ = metamap.annotate(reason, mm)
+        # list_mv = ["check", "x ray"]
+        # list_mv_order = sorted(list_mv, key=len, reverse=True)
+
+        for reason_s in list_mv:
+            if reason_s != reason and reason_s not in all_possible_reasons_lower and Preprocess.check_string_has_alphabet(reason_s) and not Preprocess.is_stopwords(reason_s) and len(reason_s) >= 2:
+                matched_concepts, _ = check_categories_distance(reason_s, preprocessing=False)
+                if matched_concepts:
+                    print("found in split reason metamap: ", reason_s)
+                    matched_concepts_final += matched_concepts
+        matched_concepts = matched_concepts_final
 
     if not matched_concepts:
         reason_split = reason.split()
@@ -437,30 +442,31 @@ if __name__ == '__main__':
 
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
-    print(current_time)
+    logging.info('Staring time:' + current_time)
+
+    seen_rfv = Utils.get_seen_rfv(phrase_code_category)
 
     all_seen_reasons = Utils.get_seen_reason()
 
-    # prediction_xlsx = os.path.join(Utils.data_dir, "prediction.xlsx")
-    # workbook_prediction = xlsxwriter.Workbook(prediction_xlsx)
-    # worksheet_analysis = workbook_prediction.add_worksheet("Prediction")
+    prediction_xlsx = os.path.join(Utils.output_dir, "prediction.xlsx")
+    workbook_prediction = xlsxwriter.Workbook(prediction_xlsx)
+    worksheet_analysis = workbook_prediction.add_worksheet("Prediction")
 
     # prediction_xlsx_normolized = os.path.join(Utils.data_dir, "prediction_normolized.xlsx")
     # workbook_prediction_normolized = xlsxwriter.Workbook(prediction_xlsx_normolized)
     # worksheet_analysis_normolized = workbook_prediction_normolized.add_worksheet("Prediction")
 
-    # worksheet_analysis.write(0, 0, "Reason")
+    worksheet_analysis.write(0, 0, "Reason")
     # worksheet_analysis_normolized.write(0, 0, "Reason")
 
-    # mm = MetaMap.get_instance("/srv/silo-q36/nlp-covid19/metamap/public_mm/bin/metamap20")
-    mm = None
+    mm = MetaMap.get_instance("/metamap/public_mm/bin/metamap20")
 
     all_unseen_reason = []
 
-    # reasons_freq = Utils.read_cats_reason(os.path.join(Utils.data_dir, "Reasons_Freq.csv"))
-    # reasons = reasons_freq['Var1'].dropna()
+    reasons_freq = Utils.read_cats_reason(os.path.join(Utils.input_dir, "Reasons_Freq.csv"))
+    reasons = reasons_freq['Var1'].dropna()
 
-    reasons = ["care plans"]
+    # reasons = ["care plans"]
 
     # try:
     all_result = {}
@@ -472,6 +478,7 @@ if __name__ == '__main__':
     count_error = 0
 
     highest_distance = const.MATCHED_SCORE
+    matched_concepts_json = json.load(open(os.path.join(Utils.data_dir, 'matched_concepts.json')))
     # os.remove(os.path.join(Utils.data_dir, 'matched_concepts.json'))
     # outfile = open(os.path.join(Utils.data_dir, 'matched_concepts.json'), 'w')
     # outfile.write("{\n")
@@ -479,6 +486,8 @@ if __name__ == '__main__':
     saved_counter = 0
 
     for number, reason in enumerate(reasons):
+        logging.info('RFV: ' + reason)
+
         original_reason = reason
 
         # print(number, reason)
@@ -494,16 +503,28 @@ if __name__ == '__main__':
             # if original_reason in const.SEEN_UNSEEN:
             #     continue
 
-            if reason.lower() in all_seen_reasons:
-                count_seen_in_gold_standard += 1
-                continue
+            # if reason.lower() in all_seen_reasons:
+            #     count_seen_in_gold_standard += 1
+            #     continue
             #
             # if reason.lower() in all_unseen_reason:
             #     count_duplicated_in_unseen_pharase += 1
             #     continue
+            matched_concept = []
+            if reason.lower() in seen_rfv:
+                for category in seen_rfv.get(reason.lower()):
+                    matched_concept.append(
+                    {"synonym": 1, "involved": "Seen", "priority": 1, "category": category,
+                     "matched_score": 0,
+                     "matched_concept":  "-|-", "preprocessed_reason": ""})
 
-            matched_concept = predict(reason, mm)
-            print(matched_concept)
+            elif reason.lower() in matched_concepts_json:
+                matched_concept = matched_concepts_json.get(reason.lower())
+            else:
+
+                matched_concept = predict(reason, mm)
+                matched_concepts_json[reason.lower()] = matched_concept
+            # print(matched_concept)
             #
             # if number != 0 and saved_counter != 0:
             #     outfile.write(",")
@@ -526,62 +547,65 @@ if __name__ == '__main__':
             # # else:
             # #     all_result[reason] = None
             #
-            # if matched_concept:
-            #     vars_ordered = sorted(matched_concept, key=lambda entity: (entity['synonym'], entity['priority'], entity['matched_score']))
-            #
-            #     for column, reason_cat_score in enumerate(vars_ordered):
-            #         if not reason_cat_score['synonym']:
-            #             true_synonym += 1
-            #
-            #         if true_synonym > 1:
-            #             print("more than one true: ", reason, reason_cat_score['category'],
-            #                   reason_cat_score['matched_concept'])
-            #             true_synonym -= 1
-            #
-            #         # print(reason_cat_score)
-            #         score = reason_cat_score['matched_score']
-            #         # confidence = score * 95 / (highest_score_list+2)
-            #         # print(confidence)
-            #         # Confidence = reason_cat_score['matched_score']
-            #
-            #         if column == 0:
-            #             worksheet_analysis.write(row + 1, 0, reason)
-            #
-            #         # if highest_score >= 50:
-            #         #     break
-            #
-            #         worksheet_analysis.set_column(column * 6 + 5, column * 6 + 5, 40)
-            #         worksheet_analysis.set_column(column * 6 + 6, column * 6 + 6, 30)
-            #         if reason_cat_score['preprocessed_reason'] != reason.lower():
-            #             worksheet_analysis.write(row + 1, column * 6 + 1, reason_cat_score['preprocessed_reason'])
-            #
-            #         worksheet_analysis.write(row + 1, column * 6 + 2, score)
-            #         if reason_cat_score['priority'] == 0:
-            #             worksheet_analysis.write(row + 1, column * 6 + 3, "priority")
-            #         else:
-            #             worksheet_analysis.write(row + 1, column * 6 + 3, reason_cat_score['involved'])
-            #         worksheet_analysis.write(row + 1, column * 6 + 4,
-            #                                  True if not reason_cat_score['synonym'] else False)
-            #         worksheet_analysis.write(row + 1, column * 6 + 5, reason_cat_score['category'])
-            #         worksheet_analysis.write(row + 1, column * 6 + 6, reason_cat_score['matched_concept'])
-            #
-            #         worksheet_analysis.write(0, column * 6 + 1, "Subword")
-            #         worksheet_analysis.write(0, column * 6 + 2, "Ontological Distance")
-            #         worksheet_analysis.write(0, column * 6 + 3, "#Involved Concepts")
-            #         worksheet_analysis.write(0, column * 6 + 4, "Seen in Gold Standard (Synonyms)")
-            #         worksheet_analysis.write(0, column * 6 + 5, "Category")
-            #         worksheet_analysis.write(0, column * 6 + 6, "ConceptID")
-            # else:
-            #     count_cannot_found += 1
-            #     worksheet_analysis.write(row + 1, 0, reason)
-            #
-            # row += 1
+            logging.info(matched_concept)
+            if matched_concept:
+                vars_ordered = sorted(matched_concept, key=lambda entity: (entity['synonym'], entity['priority'], entity['matched_score']))
+
+                for column, reason_cat_score in enumerate(vars_ordered):
+                    if not reason_cat_score['synonym']:
+                        true_synonym += 1
+
+                    if true_synonym > 1:
+                        print("more than one true: ", reason, reason_cat_score['category'],
+                              reason_cat_score['matched_concept'])
+                        true_synonym -= 1
+
+
+
+                    score = reason_cat_score['matched_score']
+                    # confidence = score * 95 / (highest_score_list+2)
+                    # print(confidence)
+                    # Confidence = reason_cat_score['matched_score']
+
+                    if column == 0:
+                        worksheet_analysis.write(row + 1, 0, reason)
+
+                    # if highest_score >= 50:
+                    #     break
+
+                    worksheet_analysis.set_column(column * 6 + 5, column * 6 + 5, 40)
+                    worksheet_analysis.set_column(column * 6 + 6, column * 6 + 6, 30)
+                    if reason_cat_score['preprocessed_reason'] != reason.lower():
+                        worksheet_analysis.write(row + 1, column * 6 + 1, reason_cat_score['preprocessed_reason'])
+
+                    worksheet_analysis.write(row + 1, column * 6 + 2, score)
+                    if reason_cat_score['priority'] == 0:
+                        worksheet_analysis.write(row + 1, column * 6 + 3, "priority")
+                    else:
+                        worksheet_analysis.write(row + 1, column * 6 + 3, reason_cat_score['involved'])
+                    worksheet_analysis.write(row + 1, column * 6 + 4,
+                                             True if not reason_cat_score['synonym'] else False)
+                    worksheet_analysis.write(row + 1, column * 6 + 5, reason_cat_score['category'])
+                    worksheet_analysis.write(row + 1, column * 6 + 6, reason_cat_score['matched_concept'])
+
+                    worksheet_analysis.write(0, column * 6 + 1, "Subword")
+                    worksheet_analysis.write(0, column * 6 + 2, "Ontological Distance")
+                    worksheet_analysis.write(0, column * 6 + 3, "#Involved Concepts")
+                    worksheet_analysis.write(0, column * 6 + 4, "Seen in Gold Standard (Synonyms)")
+                    worksheet_analysis.write(0, column * 6 + 5, "Category")
+                    worksheet_analysis.write(0, column * 6 + 6, "ConceptID")
+            else:
+                count_cannot_found += 1
+                worksheet_analysis.write(row + 1, 0, reason)
+
+            row += 1
         except Exception as e:
             # count_error += 1
             print("Error Happened: ", reason, "error", e)
             continue
 
-    # workbook_prediction.close()
+    workbook_prediction.close()
+    json.dump(matched_concepts_json, open(os.path.join(Utils.data_dir, "matched_concepts.json"), 'w'))
     # outfile.write("}")
     # outfile.close()
     # print("count_cannot_found:", count_cannot_found,
@@ -592,4 +616,5 @@ if __name__ == '__main__':
 
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
-    print(current_time)
+    logging.info('Ending Time: ' + current_time)
+
