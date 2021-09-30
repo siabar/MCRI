@@ -9,3 +9,4 @@ docker exec ontoserver /index.sh -s sctau
 
 # Download the version (2020) of MetaMap (Full download) and copy in ocker_rfv directory
 cd ../docker_rfv
+bash build-docker.sh

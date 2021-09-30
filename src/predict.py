@@ -554,8 +554,8 @@ if __name__ == '__main__':
             seen_categories = []
             if matched_concept:
                 vars_ordered = sorted(matched_concept, key=lambda entity: (entity['synonym'], entity['priority'], entity['matched_score']))
-
-                for column, reason_cat_score in enumerate(vars_ordered):
+                column = 0
+                for reason_cat_score in vars_ordered:
                     if not reason_cat_score['synonym']:
                         true_synonym += 1
 
@@ -580,7 +580,9 @@ if __name__ == '__main__':
                         seen_categories.append(reason_cat_score['category'])
                         worksheet_analysis.set_column(column + 1, column + 1, 40)
                         worksheet_analysis.write(0, column + 1, "Category")
-                        worksheet_analysis.write(row + 1, column + 1, const.CATEGORY_NAME_MAP.get(reason_cat_score['category']))
+                        category = reason_cat_score['category'].split(" (extra info)-")[-1]
+                        worksheet_analysis.write(row + 1, column + 1, const.CATEGORY_NAME_MAP.get(category.strip()))
+                        column += 1
 
                     # worksheet_analysis.set_column(column * 6 + 5, column * 6 + 5, 40)
                     # worksheet_analysis.set_column(column * 6 + 6, column * 6 + 6, 30)
