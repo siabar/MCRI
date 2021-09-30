@@ -33,6 +33,6 @@ COPY start.sh $METAMAP
 WORKDIR $METAMAP/public_mm
 RUN /bin/bash -c '../setup.sh'
 RUN chmod +x $METAMAP/start.sh
-RUN /bin/bash -c './start.sh'
+RUN /bin/bash -c '../start.sh'
 WORKDIR $HOME_MCRI/src
 

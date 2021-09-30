@@ -1,0 +1,1 @@
+docker exec -it rfv_predict python3 /MCRI/src/predict.py
