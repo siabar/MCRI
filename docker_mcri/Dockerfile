@@ -29,9 +29,10 @@ WORKDIR $METAMAP
 RUN tar xvfj public_mm_linux_main_2020.tar.bz2
 
 COPY setup.sh $METAMAP
-COPY start.sh /
+COPY start.sh $METAMAP
 WORKDIR $METAMAP/public_mm
 RUN /bin/bash -c '../setup.sh'
-RUN chmod +x /start.sh
-RUN /bin/bash -c '/start.sh'
+RUN chmod +x $METAMAP/start.sh
+RUN /bin/bash -c './start.sh'
+WORKDIR $HOME_MCRI/src
 

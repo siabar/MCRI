@@ -7,7 +7,7 @@ class API:
 
     #sct = "http://snomed.info/sct/32506021000036107/version/20210331"
     sct = "http://snomed.info/sct"
-    server = "100.1000.0.1:8080"
+    server = "100.100.0.1:8080"
 
     @staticmethod
     def call_ontoserver_extend_api(category, reason):

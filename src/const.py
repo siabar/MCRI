@@ -18,6 +18,25 @@ CATEGORY_NAME = [
                  "5294002|Development disorder"
 ]
 
+CATEGORY_NAME_MAP = {
+                "450977006|Results reference set for GP/FP reason for encounter#763288003|patient review#185349003|encounter for check up": "Results / Plans",
+                 "33879002|Active immunisation": "Immunisation",
+                 "275498002|Respiratory tract infection" :"Infection- Resp",
+                 "417163006|Traumatic AND/OR non-traumatic injury#106028002|Musculoskeletal finding": "Injury / Musculoskeletal",
+                 "21522001|Abdominal pain" : "Abdominal pain",
+                 "22253000|pain":"Pain syndrome",
+                 "14760008|Constipation" : "Constipation / Bowels",
+                 "118235002|Eye / vision finding" : "Ophthalmology",
+                 "297268004|Ear, nose and throat finding#302775008|Ear, nose and throat tests": "ENT - other",
+                 "195967001|Asthma#473011001|Allergic condition" : "Asthma and Allergy",
+                 "95320005|Disorder of skin" : "Dermatology",
+                 "74732009|Mental illness#162314006|Harmful thoughts#225481000|Abusive behaviour" : "Mental Health",
+                 "248842004|Female genitalia finding#89164003|breast lump" :"Gynae.",
+                 "235595009|Gastroesophageal reflux disease#9991008|Abdominal colic" : "Reflux / Colic",
+                 "314938000|Poor sleep pattern#248330001|General growth finding#271795006|Malaise and fatigue#271737000|Anaemia#35240004|Iron deficiency#414916001|Obesity" : "Constitutional",
+                 "40733004|Infection": "Infection- other",
+                 "5294002|Development disorder" : "Developmental / Behavioural"
+}
 
 # CATEGORY_NAME = ["297268004|Ear, nose and throat finding#302775008|Ear, nose and throat tests"]
 

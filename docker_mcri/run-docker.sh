@@ -7,5 +7,5 @@ if [ -z "$1" ] || [ -z "$2" ]
 else
   export INPUT_DIR=$1 #RFV Directory
   export OUTPUT_DIR=$2 #OUTPUT Directory
-  docker run --rm -it -v $INPUT_DIR:/MCRI/data/ -v $OUTPUT_DIR:$OUTPUT_DIR/MCRI/output readbiomed/mcri /start.sh
+  docker run --network mcri_ontoserver --name rfv_predict -t -d -v $INPUT_DIR:/MCRI/input/ -v $OUTPUT_DIR:/MCRI/output readbiomed/mcri
 fi

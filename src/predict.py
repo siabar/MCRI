@@ -27,6 +27,8 @@ main_codes = Utils.load_json(os.path.join(Utils.data_dir, "direct_main_codes.jso
 
 phrase_code_category = Utils.load_json(os.path.join(Utils.data_dir, "direct_phrase_code_category.json"))
 
+predicted_rfv = Utils.load_json(os.path.join(Utils.data_dir, "predicted.json"))
+
 
 
 
@@ -490,7 +492,7 @@ if __name__ == '__main__':
 
         original_reason = reason
 
-        # print(number, reason)
+        print(number, reason)
         reason = reason.strip()
         # reason = Preprocess.get_preprocess_prediction(reason)
         # reason = "Ankle pain"
@@ -520,8 +522,9 @@ if __name__ == '__main__':
 
             elif reason.lower() in matched_concepts_json:
                 matched_concept = matched_concepts_json.get(reason.lower())
+            elif reason.lower() in predicted_rfv:
+                matched_concept = predicted_rfv.get(reason.lower())
             else:
-
                 matched_concept = predict(reason, mm)
                 matched_concepts_json[reason.lower()] = matched_concept
             # print(matched_concept)
@@ -548,6 +551,7 @@ if __name__ == '__main__':
             # #     all_result[reason] = None
             #
             logging.info(matched_concept)
+            seen_categories = []
             if matched_concept:
                 vars_ordered = sorted(matched_concept, key=lambda entity: (entity['synonym'], entity['priority'], entity['matched_score']))
 
@@ -572,28 +576,33 @@ if __name__ == '__main__':
 
                     # if highest_score >= 50:
                     #     break
+                    if reason_cat_score['category'] not in seen_categories:
+                        seen_categories.append(reason_cat_score['category'])
+                        worksheet_analysis.set_column(column + 1, column + 1, 40)
+                        worksheet_analysis.write(0, column + 1, "Category")
+                        worksheet_analysis.write(row + 1, column + 1, const.CATEGORY_NAME_MAP.get(reason_cat_score['category']))
 
-                    worksheet_analysis.set_column(column * 6 + 5, column * 6 + 5, 40)
-                    worksheet_analysis.set_column(column * 6 + 6, column * 6 + 6, 30)
-                    if reason_cat_score['preprocessed_reason'] != reason.lower():
-                        worksheet_analysis.write(row + 1, column * 6 + 1, reason_cat_score['preprocessed_reason'])
-
-                    worksheet_analysis.write(row + 1, column * 6 + 2, score)
-                    if reason_cat_score['priority'] == 0:
-                        worksheet_analysis.write(row + 1, column * 6 + 3, "priority")
-                    else:
-                        worksheet_analysis.write(row + 1, column * 6 + 3, reason_cat_score['involved'])
-                    worksheet_analysis.write(row + 1, column * 6 + 4,
-                                             True if not reason_cat_score['synonym'] else False)
-                    worksheet_analysis.write(row + 1, column * 6 + 5, reason_cat_score['category'])
-                    worksheet_analysis.write(row + 1, column * 6 + 6, reason_cat_score['matched_concept'])
-
-                    worksheet_analysis.write(0, column * 6 + 1, "Subword")
-                    worksheet_analysis.write(0, column * 6 + 2, "Ontological Distance")
-                    worksheet_analysis.write(0, column * 6 + 3, "#Involved Concepts")
-                    worksheet_analysis.write(0, column * 6 + 4, "Seen in Gold Standard (Synonyms)")
-                    worksheet_analysis.write(0, column * 6 + 5, "Category")
-                    worksheet_analysis.write(0, column * 6 + 6, "ConceptID")
+                    # worksheet_analysis.set_column(column * 6 + 5, column * 6 + 5, 40)
+                    # worksheet_analysis.set_column(column * 6 + 6, column * 6 + 6, 30)
+                    # if reason_cat_score['preprocessed_reason'] != reason.lower():
+                    #     worksheet_analysis.write(row + 1, column * 6 + 1, reason_cat_score['preprocessed_reason'])
+                    #
+                    # worksheet_analysis.write(row + 1, column * 6 + 2, score)
+                    # if reason_cat_score['priority'] == 0:
+                    #     worksheet_analysis.write(row + 1, column * 6 + 3, "priority")
+                    # else:
+                    #     worksheet_analysis.write(row + 1, column * 6 + 3, reason_cat_score['involved'])
+                    # worksheet_analysis.write(row + 1, column * 6 + 4,
+                    #                          True if not reason_cat_score['synonym'] else False)
+                    # worksheet_analysis.write(row + 1, column * 6 + 5, reason_cat_score['category'])
+                    # worksheet_analysis.write(row + 1, column * 6 + 6, reason_cat_score['matched_concept'])
+                    #
+                    # worksheet_analysis.write(0, column * 6 + 1, "Subword")
+                    # worksheet_analysis.write(0, column * 6 + 2, "Ontological Distance")
+                    # worksheet_analysis.write(0, column * 6 + 3, "#Involved Concepts")
+                    # worksheet_analysis.write(0, column * 6 + 4, "Seen in Gold Standard (Synonyms)")
+                    # worksheet_analysis.write(0, column * 6 + 5, "Category")
+                    # worksheet_analysis.write(0, column * 6 + 6, "ConceptID")
             else:
                 count_cannot_found += 1
                 worksheet_analysis.write(row + 1, 0, reason)
