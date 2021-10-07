@@ -1,33 +1,39 @@
-    version: '2'
+version: '3'
+volumes:
+  onto:
+    driver: local
+  pgdata:
+    driver: local
+services:
+  db:
+    image: postgres:12
     volumes:
-      onto:
-        driver: local
-      pgdata:
-        driver: local
-    services:
-      db:
-        image: postgres
-        volumes:
-          - pgdata:/var/lib/postgresql/data
-        environment:
-          - POSTGRES_HOST_AUTH_METHOD=trust
-      ontoserver:
-        image: quay.io/aehrc/ontoserver:ctsa-6
-        container_name: ontoserver
-        depends_on:
-          - db
-        ports:
-          - "8080:8080"
-          - "8443:8443"
-        environment:
-          - authentication.oauth.endpoint.client_id.0=m6tknj057ovek534dgjegf2k9
-          - authentication.oauth.endpoint.client_secret.0=k5rhc4vgu07hap0uiioq2ub56ug6ph8drc9cdl8lgb11d4dde1v
-          - JAVA_OPTS=-Xmx4G
-          - ONTOSERVER_INSECURE=true
-          # - JAVA_OPTS=-Xmx14G
-        volumes:
-          - onto:/var/onto
-    networks:
-      default:
-        external: true
-        name: mcri_ontoserver
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+  ontoserver:
+    image: quay.io/aehrc/ontoserver:ctsa-6
+    container_name: ontoserver
+    read_only: true
+    security_opt:
+      - no-new-privileges
+    depends_on:
+      - db
+    ports:
+      - "8443:8443"
+      - "8080:8080"
+    environment:
+# These two lines are specific to deployment in Australia only
+      - authentication.oauth.endpoint.client_id.0=m6tknj057ovek534dgjegf2k9
+      - authentication.oauth.endpoint.client_secret.0=k5rhc4vgu07hap0uiioq2ub56ug6ph8drc9cdl8lgb11d4dde1v
+      - JAVA_OPTS=-Xmx4G        # Minimum
+#      - JAVA_OPTS=-Xmx8G      # Preferred
+    volumes:
+      - onto:/var/onto
+      - /tmp
+      - /var/log

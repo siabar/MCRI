@@ -15,7 +15,7 @@ RUN apt-get -qq update && \
     mkdir $METAMAP
 
 
-RUN pip3 install xlsxwriter nltk inflect pandas networkx requests pymetamap Flask
+RUN pip3 install xlsxwriter nltk inflect pandas networkx requests pymetamap
 
 RUN git clone https://github.com/siabar/MCRI.git MCRI
 
