@@ -487,20 +487,20 @@ if __name__ == '__main__':
     total = 0
     saved_counter = 0
 
-    for number, reason in enumerate(reasons):
-        logging.info('RFV: ' + reason)
-
-        original_reason = reason
-
-        print(number, reason)
-        reason = reason.strip()
-        # reason = Preprocess.get_preprocess_prediction(reason)
-        # reason = "Ankle pain"
-        # if number == 1:
-        #     break
-        total = number
-        true_synonym = 0
+    for number, reason in enumerate(reasons)
         try:
+            logging.info('RFV: ' + reason)
+
+            original_reason = reason
+
+            print(number, reason)
+            reason = reason.strip()
+            # reason = Preprocess.get_preprocess_prediction(reason)
+            # reason = "Ankle pain"
+            # if number == 1:
+            #     break
+            total = number
+            true_synonym = 0
 
             # if original_reason in const.SEEN_UNSEEN:
             #     continue
